@@ -9,7 +9,8 @@ export enum errorType {
     Internal = 'internalError',
     WrongResult = 'WrongResError',
     Never = 'NeverError',
-    User = 'UserError'
+    User = 'UserError',
+    DiscordAPI = 'DiscordAPIError'
 }
 
 export class ShellError extends Error {

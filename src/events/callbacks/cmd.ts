@@ -22,6 +22,7 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
             parse: []
         }
     }).catch(() => {});
+    if (cmd.opts.sudoRequired && !sudoing) return msg.reply(`Need super user permissions`).catch(() => {});
 
     const cmdArgs = cmd.parseArguments(msg.content)
 

@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits } from 'discord.js';
 import { config } from 'dotenv';
 import { Loader } from './core/loader';
+import { ShellsDB } from './cache/databases';
 config();
 
 const client = new Client({
@@ -13,3 +14,4 @@ loader.start();
 loader.load();
 
 client.login(process.env.token);
+ShellsDB; // Loads the import without prettier removing the import

@@ -1,0 +1,20 @@
+{
+	"name": "shellbot",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "Greensky <david.hesliere@gmail.com>",
+	"license": "MIT",
+	"dependencies": {
+		"discord.js": "^14.25.1",
+		"dotenv": "^17.2.3",
+		"tsc": "^2.0.4",
+		"tslib": "^2.8.1",
+		"typescript": "^5.9.3"
+	},
+	"scripts": {
+		"build": "yarn tsc -b",
+		"prettier": "prettier -w src",
+		"start": "node dist/index.js",
+		"launch": "yarn install && yarn build && yarn start"
+	}
+}

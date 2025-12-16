@@ -1,4 +1,4 @@
-import { ColorCodes } from "../../types/utils";
+import { ColorCodes, ColorFonts } from "../../types/utils";
 import { chalk } from "../../utils/chalk";
 import { errorDomain, errorType, ShellError } from "./base";
 
@@ -22,5 +22,10 @@ class LoaderError extends ShellError {
 export class ShellLoaderNoClient extends LoaderError {
     constructor(loaderType: LoaderErrorLoaders) {
         super(loaderType, `Client promised but not gived`);
+    }
+}
+export class ShellLoaderIncorrectInstance extends LoaderError {
+    constructor(loaderType: LoaderErrorLoaders, file: string) {
+        super(loaderType, `Found an incorrect type for ${chalk(file, ColorCodes.Red, ColorFonts.Light)} (expected a ${chalk(loaderType, ColorCodes.Yellow)} compatbile)`)
     }
 }

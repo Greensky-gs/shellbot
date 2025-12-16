@@ -3,10 +3,12 @@ import { existsSync, mkdirSync, readdirSync, statSync } from 'node:fs'
 import { ShellEvent } from '../structs/events';
 import { Client, ClientEvents } from 'discord.js';
 import { ShellInvalidEventError } from '../structs/errors/events';
-import { LoaderErrorLoaders, ShellLoaderNoClient } from '../structs/errors/loaders';
+import { LoaderErrorLoaders, ShellLoaderIncorrectInstance, ShellLoaderNoClient } from '../structs/errors/loaders';
 import { print } from '../utils/print';
 import { chalk } from '../utils/chalk';
 import { ColorCodes, ColorFonts } from '../types/utils';
+import { ShellCommand } from '../structs/Command';
+import { commands } from '../cache/commands';
 
 const exploreAllFiles = (path: string): string[] => {
     if (statSync(path).isDirectory()) {
@@ -64,20 +66,69 @@ class EventLoader {
         return 'EVENTS';
     }
 }
+class CommandLoader {
+    private path: string;
+    private commandsList: ShellCommand[] = [];
+    private client: Client;
+
+    constructor(path: string) {
+        this.path = join(process.cwd(), join('dist', path));
+        if (!existsSync(this.path)) {
+            mkdirSync(this.path);
+        }
+    }
+
+    public start() {
+        const paths = exploreAllFiles(this.path);
+
+        paths.forEach((path) => {
+            const required = require(path);
+            const event: ShellCommand = required?.default ?? required;
+
+            if (!event || !(event instanceof ShellCommand)) {
+                throw new ShellLoaderIncorrectInstance(LoaderErrorLoaders.Commands, path);
+            }
+
+            this.commandsList.push(event);
+        })
+    } 
+
+    public load() {
+        if (!this.client) {
+            throw new ShellLoaderNoClient(LoaderErrorLoaders.Events);
+        }
+
+        this.commandsList.forEach((cmd) => {
+            commands.set(cmd.opts.name, cmd);
+
+            print(`COMMANDS : Loaded ${chalk(cmd.opts.name, ColorCodes.Yellow)}`, ColorCodes.Blue);
+        })
+    }
+
+    public giveClient(client: Client) {
+        if (!this.client) this.client = client;
+    }
+
+    public get name() {
+        return 'COMMANDS';
+    }
+}
 
 export class Loader {
     private client: Client;
 
     private events: EventLoader;
+    private cmds: CommandLoader;
 
     constructor() {
         this.events = new EventLoader('events');
+        this.cmds=  new CommandLoader('commands');
     }
 
     private get loaders() {
-        return [this.events];
+        return [this.events, this.cmds];
     }
-    private foreach(callback: (loader: (EventLoader)) => void) {
+    private foreach(callback: (loader: (EventLoader | CommandLoader)) => void) {
         this.loaders.forEach((l) => callback(l));
     }
 

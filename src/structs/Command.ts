@@ -35,6 +35,13 @@ export class ShellCommand {
 					i++;
 					continue;
 				}
+				if (matching.argument.type == 'presence') {
+					dashedOptions.push({
+						...matching,
+						value: 0
+					})
+					if (matching.argument.mandatory) mandatoryFound++;
+				}
 				
 				const next = splitted[i + 1];
 				
@@ -122,6 +129,14 @@ export class ShellCommand {
 				if (!matching) {
 					i++;
 					continue;
+				}
+
+				if (matching.argument.type == 'presence') {
+					dashedOptions.push({
+						...matching,
+						value: 0
+					})
+					if (matching.argument.mandatory) mandatoryFound++;
 				}
 				
 				const next = splitted[i + 1];

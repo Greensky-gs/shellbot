@@ -1,7 +1,7 @@
 import { Message } from "discord.js";
 import { ShellCommandOptionsFinder } from "../structs/optionsFinder";
 
-export type shellArgumentType = "channel" | "user" | "role" | "number" | "string";
+export type shellArgumentType = "channel" | "user" | "role" | "number" | "string" | "presence";
 export type shellArgument = {
     name: string;
     description: string;

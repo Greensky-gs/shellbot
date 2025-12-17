@@ -29,7 +29,7 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
         if (!list.includes(msg.author.id)) return msg.reply('Permission denied.').catch(() => {});
     }
 
-    const cmdArgs = cmd.parseArguments(msg.content)
+    const cmdArgs = cmd.parseArguments(msg.content, sudoing);
 
     const invalids = cmdArgs.invalidDashedOptions.concat(cmdArgs.invalidDdashedOptions);
     if (invalids.length > 0) {

@@ -38,7 +38,7 @@ export class ShellCommand {
 		})
 	}
 	
-	public parseArguments(content: string) {
+	public parseArguments(content: string, sudoing: boolean) {
 		const splitted = content.split(/ +/g);
 		
 		let mandatoryFound = 0;
@@ -50,6 +50,8 @@ export class ShellCommand {
 		
 		let i = 0;
 		const ignoredIndexes: number[] = [0];
+		if (sudoing) ignoredIndexes.push(1);
+		
 		while (i < splitted.length) {
 			if (/^-[a-zA-Z]/.test(splitted[i])) {
 				const name = splitted[i].slice(1);
@@ -271,14 +273,15 @@ export class ShellCommand {
 			if (arg.type === 'channel' || arg.type === 'role' || arg.type === 'user') {
 				const val = cleanArgs.shift();
 				if (!val) {
-					invalidArgs.push(arg);
+					if (arg.mandatory) invalidArgs.push(arg);
 					break;
 				}
 
 				const res = parseMentionnable(val);
 				if (!res) {
-					invalidArgs.push(arg);
-					if (arg.mandatory) break;
+					if (arg.mandatory) {
+						invalidArgs.push(arg)
+					};
 					continue;
 				}
 				if (res[1] != arg.type) {
@@ -296,14 +299,16 @@ export class ShellCommand {
 			if (arg.type === 'number') {
 				const val = cleanArgs.shift();
 				if (!val) {
-					invalidArgs.push(arg);
+					if (arg.mandatory) invalidArgs.push(arg);
 					break;
 				}
 
 				const res = parseFloat(val);
 				if (isNaN(res) || [undefined, null].includes(res)) {
-					invalidArgs.push(arg);
-					if (arg.mandatory) break;
+					if (arg.mandatory) {
+						invalidArgs.push(arg);
+						break;
+					};
 					continue;
 				}
 
@@ -315,8 +320,10 @@ export class ShellCommand {
 			}
 			if (arg.type === 'string') {
 				if (!cleanArgs[0]?.startsWith?.('"')) {
-					invalidArgs.push(arg);
-					if (arg.mandatory) break;
+					if (arg.mandatory) {
+						invalidArgs.push(arg);
+						break;
+					};
 					continue;
 				}
 				let startIndex = 0;

@@ -35,29 +35,16 @@ export default new ShellCommand({
                 type: 'presence'
             },
             prefix: 'l'
-        },
-        {
-            doubleDash: true,
-            prefix: 'user',
-            argument: {
-                name: 'user',
-                description: "User to manage",
-                mandatory: false,
-                type: 'user'
-            }
-        },
-        {
-            doubleDash: false,
-            prefix: 'u',
-            argument: {
-                name: 'user',
-                description: "One dash alias for user",
-                mandatory: false,
-                type: 'user'
-            }
         }
     ],
-    arguments: []
+    arguments: [
+        {
+            name: 'user',
+            description: "User to manage",
+            type: 'user',
+            mandatory: false
+        }
+    ]
 }).run(async(options, message) => {
     if (message.author.id !== message.guild.ownerId) return message.reply(`\`\`\`Need to be owner\`\`\``).catch(() => {});
 
@@ -73,9 +60,10 @@ export default new ShellCommand({
             content: list.map(x => `- <@${x}>`).join('\n'),
             allowedMentions: {}
         }).catch(() => {});
+        return;
     }
 
-    const uid = options.getUser('user', true) ?? options.getUser('u', false);
+    const uid = options.getArgument('user', 'user', false);
     if (!uid) return message.reply(`\`\`\`No user specified.\nTry using mention\`\`\``).catch(() => {});
 
     const member = await message.guild.members.fetch(uid);

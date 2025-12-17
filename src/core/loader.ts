@@ -103,6 +103,9 @@ class CommandLoader {
 
             print(`COMMANDS : Loaded ${chalk(cmd.opts.name, ColorCodes.Yellow)}`, ColorCodes.Blue);
         })
+
+        print(`COMMANDS : Sorting ${chalk(commands.size.toString(), ColorCodes.Blue)} commands`, ColorCodes.Purple, ColorFonts.Light);
+        commands.sort((a, b) => a.opts.name.localeCompare(b.opts.name));
     }
 
     public giveClient(client: Client) {

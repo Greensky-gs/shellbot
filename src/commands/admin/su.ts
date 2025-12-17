@@ -44,7 +44,8 @@ export default new ShellCommand({
             type: 'user',
             mandatory: false
         }
-    ]
+    ],
+    description: "Manage super users"
 }).run(async(options, message) => {
     if (message.author.id !== message.guild.ownerId) return message.reply(`\`\`\`Need to be owner\`\`\``).catch(() => {});
 

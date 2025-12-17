@@ -1,5 +1,5 @@
 import { commands } from "../../cache/commands";
-import { ShellsDB } from "../../cache/databases";
+import { ShellsDB, SuperUsers } from "../../cache/databases";
 import { ShellEvent } from "../../structs/events";
 import { ShellCommandOptionsFinder } from "../../structs/optionsFinder";
 
@@ -23,6 +23,10 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
         }
     }).catch(() => {});
     if (cmd.opts.sudoRequired && !sudoing) return msg.reply(`Need super user permissions`).catch(() => {});
+    if (sudoing && msg.author.id != msg.guild.ownerId) {
+        const list = SuperUsers.exists(`sus.${msg.guild.id}`) ? SuperUsers.getValue(`sus.${msg.guild.id}`, 'array') as string[] : [];
+        if (!list.includes(msg.author.id)) return msg.reply('Permission denied.').catch(() => {});
+    }
 
     const cmdArgs = cmd.parseArguments(msg.content)
 

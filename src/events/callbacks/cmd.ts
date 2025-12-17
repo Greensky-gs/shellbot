@@ -2,6 +2,7 @@ import { commands } from "../../cache/commands";
 import { ShellsDB, SuperUsers } from "../../cache/databases";
 import { ShellEvent } from "../../structs/events";
 import { ShellCommandOptionsFinder } from "../../structs/optionsFinder";
+import { argumentTypeInterface } from "../../utils/interface";
 
 export default new ShellEvent('messageCreate', false, async(msg) => {
     if (!msg.guild || msg.author.bot || msg.webhookId) return;
@@ -37,11 +38,20 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
             allowedMentions: {}
         }).catch(() => {});
     }
-    if (!cmdArgs.allIncluded) return msg.reply({
-        content: `${cmdName}: arguments missing`,
+    if (cmdArgs.invalidArguments.length > 0) {
+        return msg.reply({
+            content: `Invalid arguments usage:\`\`\`${cmdArgs.invalidArguments.map(x => `${x.name}  : ${x.description} (${argumentTypeInterface[x.type]})`)}\`\`\``,
+            allowedMentions: {}
+        }).catch(() => {});
+    }
+    if (!cmdArgs.allIncluded) {
+        return msg.reply(`${cmdName}: arguments missing`).catch(() => {});
+    }
+    if (!cmdArgs.allDashedIncluded) return msg.reply({
+        content: `${cmdName}: options missing`,
         allowedMentions: {}
     }).catch(() => {});
 
-    const finder = new ShellCommandOptionsFinder(cmdArgs.dashedOptions.concat(cmdArgs.doubleDashedOptions));
+    const finder = new ShellCommandOptionsFinder(cmdArgs.dashedOptions.concat(cmdArgs.doubleDashedOptions), cmdArgs.arguments);
     cmd.callback(finder, msg);
 })

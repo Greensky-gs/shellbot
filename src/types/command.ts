@@ -18,5 +18,7 @@ export type shellOptions = {
     aliases: string[];
     sudoRequired: boolean;
     options: shellOption[];
+    arguments: shellArgument[];
 };
 export type commandCallbackType = (options: ShellCommandOptionsFinder, message: Message) => void | unknown;
+export type shellArgumentTypeReturn<T extends shellArgumentType> = T extends "number" ? number : string;

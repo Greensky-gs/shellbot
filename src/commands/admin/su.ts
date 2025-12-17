@@ -56,7 +56,8 @@ export default new ShellCommand({
                 type: 'user'
             }
         }
-    ]
+    ],
+    arguments: []
 }).run(async(options, message) => {
     if (message.author.id !== message.guild.ownerId) return message.reply(`\`\`\`Need to be owner\`\`\``).catch(() => {});
 

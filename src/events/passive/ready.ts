@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType } from "discord.js";
+import { ActivityType, ApplicationCommandOptionType, ApplicationCommandType, ChannelType } from "discord.js";
 import { ShellEvent } from "../../structs/events";
 import { ColorCodes, ColorFonts } from "../../types/utils";
 import { chalk } from "../../utils/chalk";
@@ -9,6 +9,11 @@ export default new ShellEvent('clientReady', false, async(client) => {
     print(`Logged in as ${chalk(client.user.tag, ColorCodes.Yellow)}`, ColorCodes.Cyan, ColorFonts.Light);
 
     print(`Pushing the /shell command`, ColorCodes.Red, ColorFonts.Light);
+
+    client.user.setActivity({
+        name: 'Konsole',
+        type: ActivityType.Watching
+    })
 
     await client.application.commands.set([
         {

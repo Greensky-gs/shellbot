@@ -1,5 +1,6 @@
 import { commands } from "../../cache/commands";
 import { ShellsDB, SuperUsers } from "../../cache/databases";
+import { confirmations } from "../../cache/maps";
 import { ShellEvent } from "../../structs/events";
 import { ShellCommandOptionsFinder } from "../../structs/optionsFinder";
 import { argumentTypeInterface } from "../../utils/interface";
@@ -11,6 +12,8 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
     if (ShellsDB.getValue(id, 'string') != msg.channel.id) return;
 
     if (!msg.content.length) return;
+    if (confirmations.has(`${msg.guild.id}.${msg.author.id}`)) return;
+
     const args = msg.content.split(/ +/g);
     const sudoing = args[0].toLowerCase() == 'sudo';
 

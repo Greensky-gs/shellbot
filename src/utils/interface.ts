@@ -1,5 +1,6 @@
 import { GuildTextBasedChannel, Message } from "discord.js";
 import { shellArgumentType } from "../types/command";
+import { confirmations } from "../cache/maps";
 
 export const argumentTypeInterface: Record<shellArgumentType, string> = {
     channel: 'channel',
@@ -24,19 +25,28 @@ type confirmationPromiseType<T extends boolean> = {
     result: T extends false ? null : T extends true ? boolean : never;
 }
 export const confirmation = ({ time = 120000, ...options }: confirmationOptions): Promise<confirmationPromiseType<boolean>> => new Promise(async(resolve, reject) => {
+    confirmations.set(`${options.guild}.${options.userId}`, true);
     const res = await options.channel.awaitMessages({
         filter: x => x.author.id === options.userId,
         time,
         max: 1
     }).catch(() => {});
-    if (!res) return reject(503);
+    if (!res) {
+        confirmations.delete(`${options.guild}.${options.userId}`);
+        return reject(503)
+    };
 
-    if (!res.size) return resolve({
-        collected: false,
-        reason: 'timeout',
-        message: null,
-        result: null
-    });
+    if (!res.size) {
+        confirmations.delete(`${options.guild}.${options.userId}`);
+        return resolve({
+            collected: false,
+            reason: 'timeout',
+            message: null,
+            result: null
+        });
+    }
+    confirmations.delete(`${options.guild}.${options.userId}`);
+
     return resolve({
         collected: true,
         reason: 'collected',

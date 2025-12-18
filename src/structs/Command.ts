@@ -375,6 +375,7 @@ export class ShellCommand {
 					...arg,
 					value: val.toLowerCase()
 				});
+				if (arg.mandatory) mandatoryArgsFound++;
 			}
 			if (arg.type === 'number') {
 				const val = cleanArgs.shift();

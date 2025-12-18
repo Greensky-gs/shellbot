@@ -75,19 +75,30 @@ export default new ShellCommand({
                 type: 'string',
                 mandatory: false
             }
+        },
+        {
+            prefix: 'un-parent',
+            doubleDash: true,
+            argument: {
+                name: 'unparent',
+                description: "Removes the channel from its parent",
+                type: 'presence',
+                mandatory: false
+            }
         }
     ]
 }).run(async(options, message) => {
     const channelID = options.getArgument('channel', 'channel', true);
     const parent = options.getChannel('parent', true);
     const reason = options.getString('reason', false) ?? 'N/A';
+    const rm = options.present('un-parent', true)
 
     const channel = (message.guild.channels.cache.get(channelID) ?? await message.guild.channels.fetch(channelID).catch(() => {})) as GuildChannel;
     if (!channel) return message.reply({
         content: `<#${channelID}>: channel not found`,
         allowedMentions: {}
     }).catch(() => {});
-    if (parent) {
+    if (!rm && parent) {
         const parentChannel = (message.guild.channels.cache.get(parent) ?? await message.guild.channels.fetch(parent).catch(() => {})) as GuildChannel;
         if (!parentChannel) return message.reply({
             content: `<#${parent}>: channel not found`,
@@ -116,6 +127,7 @@ export default new ShellCommand({
     channel.setPosition(newPlace, {
         reason
     }).catch(() => {});
+    if (rm) channel.setParent(null, {reason}).catch(() => {});
 
     message.reply({
         content: "channel moved"

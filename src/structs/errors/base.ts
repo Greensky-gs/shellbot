@@ -30,3 +30,8 @@ export class ShellInternalNeverError extends ShellError {
         super(errorDomain.Prerun, errorType.Internal, `${message}\nThrown at ${chalk(file, ColorCodes.Yellow)}`)
     }
 }
+export class ShellRuntimeNeverError extends ShellError {
+    constructor(message: string) {
+        super(errorDomain.Runtime, errorType.Never, message);
+    }
+}

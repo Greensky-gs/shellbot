@@ -1,0 +1,1 @@
+export const confirmations = new Map<string, boolean>();

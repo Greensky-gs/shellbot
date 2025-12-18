@@ -22,6 +22,7 @@ export class ShellCommand {
 		this.options.arguments.forEach((arg) => {
 			if (arg.mandatory) crossed = true;
 			if (crossed && !arg.mandatory) {
+				// TODO inversé
 				throw new ShellArgsBuildMandatoryOrderError(this.options.name, arg.name);
 			}
 			if (arg.type === 'presence') {
@@ -51,7 +52,7 @@ export class ShellCommand {
 		let i = 0;
 		const ignoredIndexes: number[] = [0];
 		if (sudoing) ignoredIndexes.push(1);
-		
+
 		while (i < splitted.length) {
 			if (/^-[a-zA-Z]/.test(splitted[i])) {
 				const name = splitted[i].slice(1);

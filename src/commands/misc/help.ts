@@ -22,17 +22,15 @@ export default new ShellCommand({
 }).run(async(options, message) => {
     const cmdName = options.getArgument('command', 'string', false);
     if (!cmdName) {
-        return message.reply({
+        message.reply({
             content: `\`\`\`Commands list:\n${commands.map((cmd => `${cmd.opts.sudoRequired ? 'sudo ' : ''}${cmd.opts.name} : ${cmd.opts.description}`)).join('\n')}\`\`\``,
             allowedMentions: {}
         }).catch(() => {});
+        return ['1', 'never']
     }
 
     const cmd = commands.find(x => x.opts.name === cmdName.toLowerCase() || x.opts.aliases.includes(cmdName.toLowerCase()));
-    if (!cmd) return message.reply({
-        content: `\`\`\`${cmdName}: Unknown command\`\`\``,
-        allowedMentions: {}
-    }).catch(() => {});
+    if (!cmd) return ['0', `${cmdName}: Unknown command`];
 
     message.reply({
         allowedMentions: {},
@@ -44,4 +42,6 @@ export default new ShellCommand({
             return 'never'
         })()}`).join(' ') : 'no argument'}\n\nOptions: ${!cmd.opts.options.length ? 'None' : '\n    ' + cmd.opts.options.map(o => `${['-', '--'][+o.doubleDash]}${o.prefix} : ${o.argument.description}${o.argument.type === 'selection' ? `: ${(o.argument as shellArgument<'selection'>).choices.join('|')}` :''}`).join('\n    ')}\nArguments: ${!cmd.opts.arguments.length ? 'None' : '\n    ' + cmd.opts.arguments.map(a => `${a.name} : ${a.description}${a.type === 'selection' ? `: ${(a as shellArgument<'selection'>).choices.join('|')}` :''}`)}\nNote : [] indicates mandatory arguments/options, and <> indicates optional arguments/options\`\`\``
     })
+
+    return ['1', 'never'];
 })

@@ -54,7 +54,7 @@ export default new ShellCommand({
     const reason = options.getString('reason', true) ?? 'N/A';
 
     const channel = message.guild.channels.cache.get(channelId) ?? await message.guild.channels.fetch(channelId).catch(() => {}) as GuildChannel;
-    if (!channel) return message.reply("```Channel not found```").catch(() => {});
+    if (!channel) return ['0', 'Channel not found'];
 
     if (!skip) {
         const msg = await message.reply(`Are you sure to delete <#${channel.id}>${recursive && channel.type === ChannelType.GuildCategory ? " and its channels ?" : ' ?'}\n\nSend \`yes\` in the channel to proceed`).catch(() => {});
@@ -64,13 +64,7 @@ export default new ShellCommand({
             userId: message.author.id,
             message: message
         }).catch(() => {});
-        if (!res || !res.result) return !!msg ? msg.reply({
-            content: 'Canceled',
-            allowedMentions: {}
-        }).catch(() => {}) : message.reply({
-            content: 'Canceled',
-            allowedMentions: {}
-        }).catch(() => {});
+        if (!res || !res.result) return ['0', 'Canceled']
     }
 
     if (recursive && channel.type === ChannelType.GuildCategory) {
@@ -81,6 +75,6 @@ export default new ShellCommand({
     }
     const res = await channel.delete(reason).catch(() => {});
 
-    if (!!res) return message.reply(`Operations done.`).catch(() => {});
-    message.reply("Something went wrong").catch(() => {});
+    if (!!res) return [res.id, "ok"];
+    return ['0', 'Something wrent wrong.'];
 })

@@ -9,9 +9,10 @@ export default new ShellCommand({
     description: "Ping the shell"
 }).run(async(options, msg) => {
     const res = await msg.reply(`pong !`).catch(() => {});
-    if (!res) return;
+    if (!res) return ['0', ' fail'];
     
     const time = Date.now() - res.createdTimestamp;
 
     res.edit(`pong ! *${time}ms*`).catch(() => {});
+    return [Math.abs(time).toString(), 'pong'];
 })

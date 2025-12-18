@@ -94,32 +94,20 @@ export default new ShellCommand({
     const rm = options.present('un-parent', true)
 
     const channel = (message.guild.channels.cache.get(channelID) ?? await message.guild.channels.fetch(channelID).catch(() => {})) as GuildChannel;
-    if (!channel) return message.reply({
-        content: `<#${channelID}>: channel not found`,
-        allowedMentions: {}
-    }).catch(() => {});
+    if (!channel) return ['0', 'Channel not found'];
     if (!rm && parent) {
         const parentChannel = (message.guild.channels.cache.get(parent) ?? await message.guild.channels.fetch(parent).catch(() => {})) as GuildChannel;
-        if (!parentChannel) return message.reply({
-            content: `<#${parent}>: channel not found`,
-            allowedMentions: {}
-        }).catch(() => {});
-        if (parentChannel.type != ChannelType.GuildCategory) return message.reply({
-            content: `<#${parent}>: parent channel is not a category`,
-            allowedMentions: {}
-        }).catch(() => {});
+        if (!parentChannel) return ['0', "Parent channel not found"];
+        if (parentChannel.type != ChannelType.GuildCategory) return ['0', `${parentChannel.name} is not a category channel`];
 
-        if (channel.type === ChannelType.GuildCategory) return message.reply({
-            content: `Cannot move <#${channel.id}> into <#${parent}>: <#${channel}> is a category`,
-            allowedMentions: {}
-        }).catch(() => {});
+        if (channel.type === ChannelType.GuildCategory) return ['0', `Cannot move ${channel.name} into ${parentChannel.name} : ${channel.name} is a category`];
         channel.setParent(parentChannel.id, {
             reason
         }).catch(() => {});
     }
 
     const amount = options.getNumber('a', false);
-    if (!amount) return message.reply(`No amount specified`).catch(() => {});
+    if (!amount) return ['0', "No amount specified"];
 
     const direction: 'up' | 'down' | 'abs' = options.present('u', false) ? 'up' : options.present('d', false) ? 'down' : options.present('abs', true) ? 'abs' : 'abs';
     const newPlace = direction == 'abs' ? amount : (channel.position + amount * (direction == 'up' ? -1 : 1));
@@ -132,4 +120,6 @@ export default new ShellCommand({
     message.reply({
         content: "channel moved"
     }).catch(() => {});
+
+    return [channel.id, 'never'];
 })

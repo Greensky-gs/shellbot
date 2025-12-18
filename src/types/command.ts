@@ -23,5 +23,13 @@ export type shellOptions = {
     arguments: shellArgument<shellArgumentType>[];
     description: string;
 };
-export type commandCallbackType = (options: ShellCommandOptionsFinder, message: Message) => void | unknown;
+type returnValue = string;
+type returnMessage = string;
+type callbackReturnValue = [returnValue, returnMessage];
+
+/**
+ * test
+ * @returns [returnValue, returnMessage] returnMessage is displayed only if returnValue === 0
+ */
+export type commandCallbackType = (options: ShellCommandOptionsFinder, message: Message) => callbackReturnValue | Promise<callbackReturnValue>;
 export type shellArgumentTypeReturn<T extends shellArgumentType> = T extends "number" ? number : string;

@@ -38,14 +38,9 @@ export default new ShellCommand({
     const reason = options.getString('reason', true) ?? 'N/A';
 
     const channel = message.guild.channels.cache.get(channelID) ?? (await message.guild.channels.fetch(channelID).catch(() => {})) as GuildChannel;
-    if (!channel) return message.reply({
-        content: "```Channel not found```",
-        allowedMentions: {}
-    }).catch(() => {});
+    if (!channel) return ['0', 'Channel not found'];
 
     await channel.setName(name, reason).catch(() => {});
-    message.reply({
-        content: `<#${channel.id}>`,
-        allowedMentions: {}
-    }).catch(() => {});
+
+    return [channel.id, 'created'];
 });

@@ -69,11 +69,8 @@ export default new ShellCommand({
     const nsfw = options.present('nsfw', true);
 
     const parentChannel = !!parentId ? ((message.guild.channels.cache.get(parentId) ?? await message.guild.channels.fetch(parentId).catch(() => {})) as GuildChannel) : null;
-    if (!!parentId && !parentChannel) return message.reply("``Parent channel not found````").catch(() => {});
-    if (!!parentId && parentChannel.type != ChannelType.GuildCategory) return message.reply({
-        content: `<#${parentId}> is not a category channel`,
-        allowedMentions: {}
-    }).catch(() => {});
+    if (!!parentId && !parentChannel) return ['0', "Parent channel not found"];
+    if (!!parentId && parentChannel.type != ChannelType.GuildCategory) return ['0', `${parentChannel.name} is not a category channel.`]
 
     const channel = await message.guild.channels.create({
         name,
@@ -82,10 +79,7 @@ export default new ShellCommand({
         nsfw,
         reason
     }).catch(() => {});
-    if (!channel) return message.reply("Creation failed").catch(() => {});
+    if (!channel) return ['0', "Creation failed"];
 
-    message.reply({
-        content: `<#${channel.id}>`,
-        allowedMentions: {}
-    }).catch(() => {});
+    return [channel.id, 'never']
 });

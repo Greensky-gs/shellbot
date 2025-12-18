@@ -56,5 +56,16 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
     }).catch(() => {});
 
     const finder = new ShellCommandOptionsFinder(cmdArgs.dashedOptions.concat(cmdArgs.doubleDashedOptions), cmdArgs.arguments);
-    cmd.callback(finder, msg);
+    const result = await cmd.callback(finder, msg);
+    
+    if (!result) return msg.reply({
+        content: 'Something wrent wrong. Contact my dev'
+    }).catch(() => {});
+    if (result[0] === '0') {
+        return msg.reply(`\`\`\`Command failed with code 0\n${result[1]}\`\`\``).catch(() => {});
+    }
+    msg.reply({
+        content: `\`\`\`${result[0]}\`\`\``,
+        allowedMentions: {}
+    }).catch(() => {});
 })

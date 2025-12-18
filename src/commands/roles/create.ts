@@ -64,10 +64,7 @@ export default new ShellCommand({
     const reason = opts.getString('reason', true) ?? 'N/A';
 
     const hexColor = parseHexColor(color);
-    if (!hexColor) return msg.reply({
-        content: `\`${color}\` : invalid hex color. Something like : \`#ef93e1\``,
-        allowedMentions: {}
-    }).catch(() => {});
+    if (!hexColor) return ['0', `\`${color}\` : invalid hex color. Something like : \`#ef93e1\``]
 
     const role = await msg.guild.roles.create({
         name,
@@ -76,10 +73,7 @@ export default new ShellCommand({
         mentionable: mention,
         reason
     }).catch(() => {});
-    if (!role) return msg.reply('Creation failed').catch(() => {});
+    if (!role) return ['0', 'creation failed'];
 
-    msg.reply({
-        content: `<@&${role.id}>`,
-        allowedMentions: {}
-    }).catch(() => {});
+    return [role.id, '']
 });

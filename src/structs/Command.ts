@@ -2,10 +2,11 @@ import { parseMentionnable } from "../utils/regexes";
 import {
 	commandCallbackType,
 	shellArgument,
+	shellArgumentType,
 	shellOption,
 	shellOptions,
 } from "../types/command";
-import { ShellArgsBuildMandatoryOrderError, ShellCommandArgumentUnknownType, ShellCommandOptionUnknownType, ShellCommandPresenceArgumentError } from "./errors/command";
+import { ShellArgsBuildMandatoryOrderError, ShellCommandArgChoiceSpace, ShellCommandArgInvalidChoices, ShellCommandArgumentUnknownType, ShellCommandOptChoiceSpace, ShellCommandOptInvalidChoices, ShellCommandOptionUnknownType, ShellCommandPresenceArgumentError } from "./errors/command";
 
 export class ShellCommand {
 	private options: shellOptions;
@@ -20,21 +21,38 @@ export class ShellCommand {
 	private check() {
 		let crossed = false;
 		this.options.arguments.forEach((arg) => {
-			if (arg.mandatory) crossed = true;
-			if (crossed && !arg.mandatory) {
-				// TODO inversé
+			if (!arg.mandatory) crossed = true;
+			if (crossed && arg.mandatory) {
 				throw new ShellArgsBuildMandatoryOrderError(this.options.name, arg.name);
 			}
 			if (arg.type === 'presence') {
 				throw new ShellCommandPresenceArgumentError(this.options.name, arg.name);
 			}
-			if (!['channel', 'user', 'role', 'number', 'string'].includes(arg.type)) {
+			if (!['channel', 'user', 'role', 'number', 'string', 'selection'].includes(arg.type)) {
 				throw new ShellCommandArgumentUnknownType(this.options.name, arg.name, arg.type);
+			}
+			if (arg.type === 'selection') {
+				const a = arg as shellArgument<'selection'>;
+				if (!a.choices || [undefined,null].includes(a.choices) || !Array.isArray(a.choices) || !a.choices.length) {
+					throw new ShellCommandArgInvalidChoices(this.options.name, a.name);
+				}
+				if (a.choices.some(x => x.includes(' '))) {
+					throw new ShellCommandArgChoiceSpace(this.options.name, a.name);
+				}
 			}
 		});
 		this.options.options.forEach((opt) => {
-			if (!['channel', 'user', 'role', 'number', 'string', 'presence'].includes(opt.argument.type)) {
+			if (!['channel', 'user', 'role', 'number', 'string', 'selection', 'presence'].includes(opt.argument.type)) {
 				throw new ShellCommandOptionUnknownType(this.options.name, opt.prefix, opt.argument.type);
+			}
+			if (opt.argument.type === 'selection') {
+				const a = opt.argument as shellArgument<'selection'>;
+				if (!a.choices || [undefined, null].includes(a.choices) || !Array.isArray(a.choices) || !a.choices.length) {
+					throw new ShellCommandOptInvalidChoices(this.options.name, a.name);
+				}
+				if (a.choices.some(x => x.includes(' '))) {
+					throw new ShellCommandOptChoiceSpace(this.options.name, a.name);
+				}
 			}
 		})
 	}
@@ -99,6 +117,26 @@ export class ShellCommand {
 					});
 					ignoredIndexes.push(i, i + 1);
 					if (matching.argument.mandatory) mandatoryFound++;
+				}
+				if (matching.argument.type === 'selection') {
+					const arg = matching.argument as shellArgument<'selection'>;
+					if (!next) {
+						invalidDashedOptions.push(splitted[i]);
+						i++;
+						continue;
+					}
+
+					if (!arg.choices.includes(next.toLowerCase())) {
+						i++;
+						invalidDashedOptions.push(splitted[i]);
+						continue;
+					}
+					dashedOptions.push({
+						...matching,
+						value: next.toLowerCase()
+					});
+					ignoredIndexes.push(i, i+1);
+					if (arg.mandatory) mandatoryFound++;
 				}
 				if (matching.argument.type == "number") {
 					if (!next) {
@@ -203,6 +241,26 @@ export class ShellCommand {
 					ignoredIndexes.push(i);
 					if (matching.argument.mandatory) mandatoryFound++;
 				}
+				if (matching.argument.type === 'selection') {
+					const arg = matching.argument as shellArgument<'selection'>;
+					if (!next) {
+						invalidDdashedOptions.push(splitted[i]);
+						i++;
+						continue;
+					}
+
+					if (!arg.choices.includes(next.toLowerCase())) {
+						i++;
+						invalidDdashedOptions.push(splitted[i]);
+						continue;
+					}
+					ddashedOptions.push({
+						...matching,
+						value: next.toLowerCase()
+					});
+					ignoredIndexes.push(i, i+1);
+					if (arg.mandatory) mandatoryFound++;
+				}
 				if (matching.argument.type == "number") {
 					if (!next) {
 						invalidDdashedOptions.push(splitted[i]);
@@ -266,8 +324,8 @@ export class ShellCommand {
 		const dashedMandatories = this.options.options.filter((x) => x.argument.mandatory).length;
 
 		const cleanArgs = splitted.filter((_, i) => !ignoredIndexes.includes(i));
-		const argumentValues: (shellArgument & { value: string | number })[] = [];
-		const invalidArgs: shellArgument[] = [];
+		const argumentValues: (shellArgument<shellArgumentType> & { value: string | number })[] = [];
+		const invalidArgs: shellArgument<shellArgumentType>[] = [];
 		let mandatoryArgsFound = 0;
 
 		for (const arg of this.options.arguments) {
@@ -296,6 +354,27 @@ export class ShellCommand {
 					value: res[0]
 				});
 				if (arg.mandatory) mandatoryArgsFound++;
+			}
+			if (arg.type === 'selection') {
+				const argument = arg as shellArgument<'selection'>;
+				const val = cleanArgs.shift();
+				if (!val) {
+					if (arg.mandatory) invalidArgs.push(arg);
+					break;
+				}
+
+				if (!argument.choices.includes(val.toLowerCase())) {
+					if (arg.mandatory) {
+						invalidArgs.push(arg);
+						break;
+					}
+					continue;
+				}
+
+				argumentValues.push({
+					...arg,
+					value: val.toLowerCase()
+				});
 			}
 			if (arg.type === 'number') {
 				const val = cleanArgs.shift();

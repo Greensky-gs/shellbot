@@ -7,7 +7,8 @@ export const argumentTypeInterface: Record<shellArgumentType, string> = {
     role: 'role',
     number: 'number',
     presence: 'trigger',
-    string: "text"
+    string: "text",
+    selection: 'selector'
 }
 type confirmationOptions = {
     userId: string;

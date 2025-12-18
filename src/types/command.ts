@@ -1,24 +1,26 @@
 import { Message } from "discord.js";
 import { ShellCommandOptionsFinder } from "../structs/optionsFinder";
 
-export type shellArgumentType = "channel" | "user" | "role" | "number" | "string" | "presence";
-export type shellArgument = {
+export type shellArgumentType = "channel" | "user" | "role" | "number" | "string" | 'selection' | "presence";
+export type shellArgument<T extends shellArgumentType = shellArgumentType> = {
     name: string;
     description: string;
-    type: shellArgumentType;
+    type: T;
     mandatory: boolean;
-};
+} & (T extends 'selection' ? {
+    choices: string[];
+} : {});
 export type shellOption = {
     prefix: string;
     doubleDash: boolean;
-    argument: shellArgument;
+    argument: shellArgument<shellArgumentType>;
 };
 export type shellOptions = {
     name: string;
     aliases: string[];
     sudoRequired: boolean;
     options: shellOption[];
-    arguments: shellArgument[];
+    arguments: shellArgument<shellArgumentType>[];
     description: string;
 };
 export type commandCallbackType = (options: ShellCommandOptionsFinder, message: Message) => void | unknown;

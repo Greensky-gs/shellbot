@@ -7,7 +7,7 @@ import { ShellCommandOptsFinderTypeError } from "./errors/command";
 type cmdOption = shellOption & {
     value: string | number;
 };
-type cmdArg = shellArgument & {
+type cmdArg = shellArgument<shellArgumentType> & {
     value: string | number;
 }
 
@@ -53,6 +53,9 @@ export class ShellCommandOptionsFinder {
         return this.getV(name, double) as number;
     }
     public getString(name: string, double: boolean): string {
+        return this.getV(name, double) as string;
+    }
+    public getChoice(name: string, double: boolean): string {
         return this.getV(name, double) as string;
     }
     public present(name: string, double: boolean): boolean {

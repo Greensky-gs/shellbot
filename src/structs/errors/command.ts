@@ -33,3 +33,23 @@ export class ShellCommandOptsFinderTypeError extends ShellInternalNeverError {
         super(`Tried to get argument ${chalk(optionName, ColorCodes.Yellow)} of type ${chalk(expected, ColorCodes.Red, ColorFonts.Light)} but got type ${chalk(got, ColorCodes.Red, ColorFonts.Light)}`, file);
     }
 }
+export class ShellCommandArgInvalidChoices extends ShellCommandError {
+    constructor(cmdName: string, argName: string) {
+        super(errorDomain.Prerun, errorType.Internal, cmdName, `Argument ${chalk(argName, ColorCodes.Yellow)} has no choices as selection typed argument`);
+    }
+}
+export class ShellCommandOptInvalidChoices extends ShellCommandError {
+    constructor(cmdName: string, optName: string) {
+        super(errorDomain.Prerun, errorType.Internal, cmdName, `Option ${chalk(optName, ColorCodes.Yellow)} has no choices as selection typed option`);
+    }
+}
+export class ShellCommandOptChoiceSpace extends ShellCommandError {
+    constructor(cmdName: string, optName: string) {
+        super(errorDomain.Prerun, errorType.Internal, cmdName, `Option ${chalk(optName, ColorCodes.Yellow)} has options with spaces inside`);
+    }
+}
+export class ShellCommandArgChoiceSpace extends ShellCommandError {
+    constructor(cmdName: string, argName: string) {
+        super(errorDomain.Prerun, errorType.Internal, cmdName, `Argument ${chalk(argName, ColorCodes.Yellow)} has options with spaces inside`);
+    }
+}

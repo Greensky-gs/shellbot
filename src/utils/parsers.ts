@@ -4,6 +4,7 @@ export const parseCommands = (input: string): string[] => {
     const splittersIndex = [];
     let inText = false;
     let backslashed = false;
+    let atted = false;
 
     while (i < input.length) {
         if (input[i] === '\\') {
@@ -11,14 +12,21 @@ export const parseCommands = (input: string): string[] => {
             i++;
             continue;
         }
+        if (input[i] === '@') {
+            if (backslashed) backslashed = false;
+            atted = true;
+            i++;
+            continue;
+        }
         if (input[i] === '"' && !backslashed) {
             inText = !inText;
         }
-        if (splitters.includes(input[i]) && !inText) {
+        if (splitters.includes(input[i]) && !inText && !atted) {
             splittersIndex.push(i);
         }
 
         if (backslashed) backslashed = false;
+        if (atted) atted = false;
         i++;
     }
 

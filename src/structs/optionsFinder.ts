@@ -16,6 +16,9 @@ export class ShellCommandOptionsFinder {
     private args: Record<string, cmdArg> = {};
     private simple: Record<string, cmdOption> = {};
     private double: Record<string, cmdOption> = {};
+
+    private toReplace: {type: 'a' | 's' | 'd'; key: string}[] = [];
+    private replaced: boolean = false;
     
     constructor(options: cmdOption[], args: cmdArg[]) {
         this.options = options;
@@ -25,9 +28,18 @@ export class ShellCommandOptionsFinder {
     }
     private load() {
         this.options.forEach((option) => {
-            if (option.doubleDash) this.double[option.prefix] = option;
-            if (!option.doubleDash) this.simple[option.prefix] = option;
+            if (option.doubleDash) {
+                this.double[option.prefix] = option;
+                if (option.value === '$?') this.toReplace.push({ type: 'd', key: option.prefix });
+            };
+            if (!option.doubleDash) {
+                this.simple[option.prefix] = option;
+                if (option.value === '$?') this.toReplace.push({ type: 'd', key: option.prefix });
+            };
         });
+        Object.entries(this.args).forEach(([k, v]) => {
+            if (v.value === '$?') this.toReplace.push({ type: 'a', key: k });
+        })
     }
     private getV(name: string, d: boolean) {
         if (d) return this.double[name]?.value;
@@ -73,5 +85,20 @@ export class ShellCommandOptionsFinder {
         }
 
         return arg.value as R;
+    }
+
+    public get hasFill() {
+        return !!this.toReplace.length;
+    }
+    public giveFill(fill: string) {
+        if (this.replaced) return this;
+        this.toReplace.forEach(({ type, key }) => {
+            ({ s: this.simple, d: this.double, a: this.args })[type][key].value = fill; 
+        });
+        this.replaced = true;
+        return this;
+    }
+    public get beenReplaced() {
+        return !!this.toReplace.length && this.replaced;
     }
 }

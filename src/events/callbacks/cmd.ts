@@ -126,6 +126,11 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
 
     if (stack.height === 1) {
         const val = stack.unqueue() as [ShellCommand, ShellCommandOptionsFinder];
+
+        if (val[1].hasFill) return msg.reply({
+            content: "```Invalid usage of $? in a single command execution```",
+            allowedMentions: {}
+        }).catch(() => {});
         const res = await executeCommand(val[0], val[1], msg);
         if (!res[0]) return msg.reply({
             content: `\`\`\`${res[2]}\`\`\``,
@@ -157,6 +162,13 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
         const a = stack.unqueue() as [ShellCommand, ShellCommandOptionsFinder];
         const b = stack.unqueue() as [ShellCommand, ShellCommandOptionsFinder];
 
+        if (a[1].hasFill) {
+            if (!latest) return msg.reply({
+                content: "```Invalid usage of $? in first command```",
+                allowedMentions: {}
+            }).catch(() => {});
+            a[1].giveFill(latest);
+        }
         const resA = await executeCommand(a[0], a[1], msg);
         if (v === '&') {
             if (!resA[0]) {
@@ -165,6 +177,9 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
                     allowedMentions: {}
                 }).catch(() => {});
             } else {
+                if (b[1].hasFill) {
+                    b[1].giveFill(resA[1]);
+                }
                 const resB = await executeCommand(b[0], b[1], msg);
                 if (!resB[0]) {
                     return msg.reply({
@@ -176,6 +191,7 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
                 }
             }
         } else if (v === '|') {
+            if (b[1].hasFill) b[1].giveFill(resA[1]);
             const resB = await executeCommand(b[0], b[1], msg);
             if (!resA[0] && !resB[0]) {
                 return msg.reply({

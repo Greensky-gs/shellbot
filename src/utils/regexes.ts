@@ -1,8 +1,9 @@
 export const parseMentionnable = (content: string) => {
-    const regex = /<(?<type>@&|#|@)(?<id>\d+)>/g;
+    const regex = /(<(?<type>@&|#|@)(?<id>\d+)>)|(?<ide>\d+)/g;
     const res = regex.exec(content);
 
     if (!res) return null;
+    if (!res.groups.type) return [res.groups.ide, 'cannot']
     return [res.groups.id, {'@': 'user', '#': 'channel', '@&': 'role'}[res.groups.type]];
 }
 export const parseHexColor = (content: string): null | [`#${string}`, number] => {

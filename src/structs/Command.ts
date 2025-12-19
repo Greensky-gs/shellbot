@@ -99,13 +99,23 @@ export class ShellCommand {
 						i++;
 						continue;
 					}
+					if (next === '$?') {
+						i++;
+						dashedOptions.push({
+							...matching,
+							value: '$?'
+						});
+						ignoredIndexes.push(i, i + 1);
+						if (matching.argument.mandatory) mandatoryFound++;
+						continue;
+					}
 					const res = parseMentionnable(next);
 					if (!res) {
 						i++;
 						invalidDashedOptions.push(splitted[i]);
 						continue;
 					}
-					if (res[1] != matching.argument.type) {
+					if (res[1] !== 'cannot' && res[1] != matching.argument.type) {
 						invalidDashedOptions.push(splitted[i]);
 						i++;
 						continue;
@@ -159,6 +169,16 @@ export class ShellCommand {
 					if (matching.argument.mandatory) mandatoryFound++;
 				}
 				if (matching.argument.type == "string") {
+					if (next && next === '$?') {
+						i++;
+						ignoredIndexes.push(i, i + 1);
+						if (matching.argument.mandatory) mandatoryFound++;
+						dashedOptions.push({
+							...matching,
+							value: '$?'
+						});
+						continue;
+					}
 					if (!next || !next.startsWith('"')) {
 						i++;
 						invalidDashedOptions.push(splitted[i]);
@@ -222,13 +242,23 @@ export class ShellCommand {
 						i++;
 						continue;
 					}
+					if (next === '$?') {
+						i++;
+						ddashedOptions.push({
+							...matching,
+							value: '$?'
+						});
+						if (matching.argument.mandatory) mandatoryFound++;
+						ignoredIndexes.push(i, i + 1);
+						continue;
+					}
 					const res = parseMentionnable(next);
 					if (!res) {
 						i++;
 						invalidDdashedOptions.push(splitted[i]);
 						continue;
 					}
-					if (res[1] != matching.argument.type) {
+					if (res[1] !== 'cannot' && res[1] != matching.argument.type) {
 						invalidDdashedOptions.push(splitted[i]);
 						i++;
 						continue;
@@ -282,6 +312,16 @@ export class ShellCommand {
 					if (matching.argument.mandatory) mandatoryFound++;
 				}
 				if (matching.argument.type == "string") {
+					if (next && next === '$?') {
+						i++;
+						ddashedOptions.push({
+							...matching,
+							value: '$?'
+						});
+						ignoredIndexes.push(i, i + 1);
+						if (matching.argument.mandatory) mandatoryFound++;
+						continue;
+					}
 					if (!next || !next.startsWith('"')) {
 						i++;
 						invalidDdashedOptions.push(splitted[i]);
@@ -335,6 +375,14 @@ export class ShellCommand {
 					if (arg.mandatory) invalidArgs.push(arg);
 					break;
 				}
+				if (val === '$?') {
+					if (arg.mandatory) mandatoryArgsFound++;
+					argumentValues.push({
+						...arg,
+						value: '$?'
+					});
+					continue;
+				}
 
 				const res = parseMentionnable(val);
 				if (!res) {
@@ -343,7 +391,7 @@ export class ShellCommand {
 					};
 					continue;
 				}
-				if (res[1] != arg.type) {
+				if (res[1] != 'cannot' && res[1] != arg.type) {
 					invalidArgs.push(arg);
 					if (arg.mandatory) break;
 					continue;
@@ -400,6 +448,14 @@ export class ShellCommand {
 				if (arg.mandatory) mandatoryArgsFound++;
 			}
 			if (arg.type === 'string') {
+				if (cleanArgs[0] && cleanArgs[0] === '$?') {
+					argumentValues.push({
+						...arg,
+						value: cleanArgs.shift()
+					});
+					if (arg.mandatory) mandatoryArgsFound++;
+					continue;
+				}
 				if (!cleanArgs[0]?.startsWith?.('"')) {
 					if (arg.mandatory) {
 						invalidArgs.push(arg);

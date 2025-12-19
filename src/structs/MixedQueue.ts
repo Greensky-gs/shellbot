@@ -39,4 +39,13 @@ export class MixedQueue<T> {
     public toString() {
         return this.values.map(x => x).join(', ');
     }
+
+    /**
+     *  Empties `queue`
+     */
+    public merge(queue: MixedQueue<T>) {
+        while (!queue.empty()) {
+            this.queue(queue.unqueue());
+        }
+    }
 }

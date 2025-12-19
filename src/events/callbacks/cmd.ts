@@ -19,12 +19,12 @@ const checkValidity = (cmdList: string[]): {valid: boolean; joiners: string[]; c
             joiners.push(joinerRes.groups.val);
             return [null, null]
         };
-
+        
         const args = content.replace(/^ */, '').split(/ +/g);
         const sudoing = args[0].toLowerCase() === 'sudo';
-
+        
         const cmdName = args[+sudoing]?.toLowerCase();
-
+        
         const cmd = commands.find(x => x.opts.name === cmdName || x.opts.aliases.includes(cmdName));
         if (!cmd) {
             invalids.push({
@@ -40,9 +40,9 @@ const checkValidity = (cmdList: string[]): {valid: boolean; joiners: string[]; c
             });
             return [null, null]
         }
-
+        
         const cmdArgs = cmd.parseArguments(content.replace(/^ */, ''), sudoing);
-
+        
         const invalidsOpts = cmdArgs.invalidDashedOptions.concat(cmdArgs.invalidDdashedOptions);
         if (!!invalidsOpts.length) {
             invalids.push({
@@ -74,7 +74,7 @@ const checkValidity = (cmdList: string[]): {valid: boolean; joiners: string[]; c
         }
         return [cmd, new ShellCommandOptionsFinder(cmdArgs.dashedOptions.concat(cmdArgs.doubleDashedOptions), cmdArgs.arguments)];
     }).filter(([a,b]) => a != null && b != null) as [ShellCommand, ShellCommandOptionsFinder][];
-
+    
     return {
         valid: !invalids.length,
         invalids,
@@ -92,10 +92,10 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
     const id = `shells.${msg.guild.id}`;
     if (!ShellsDB.exists(id)) return;
     if (ShellsDB.getValue(id, 'string') != msg.channel.id) return;
-
+    
     if (!msg.content.length) return;
     if (confirmations.has(`${msg.guild.id}.${msg.author.id}`)) return;
-
+    
     const cmds = parseCommands(msg.content);
     const parsed = checkValidity(cmds);
     
@@ -112,21 +112,28 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
         }).catch(() => {});
     }
     
-    const stack = new MixedQueue<string | [ShellCommand, ShellCommandOptionsFinder]>()
+    const stack = new MixedQueue<string | [ShellCommand, ShellCommandOptionsFinder]>();
+    const aux = new MixedQueue<string | [ShellCommand, ShellCommandOptionsFinder]>();
+    
     let i = 0;
     const total = parsed.joiners.length + parsed.cmds.length;
+    if (total === 1) {
+        stack.stack(parsed.cmds.shift());
+    }
     while (i < total) {
-        if (i % 2) {
-            stack.stack(parsed.joiners.shift());
-        } else {
-            stack.queue(parsed.cmds.shift());
+        if (i % 2 === 1) {
+            if (i === 1) aux.queue(parsed.cmds.shift());
+            aux.stack(parsed.joiners.shift());
+            aux.queue(parsed.cmds.shift());
+            
+            stack.merge(aux);
         }
         i++;
     };
-
+    
     if (stack.height === 1) {
         const val = stack.unqueue() as [ShellCommand, ShellCommandOptionsFinder];
-
+        
         if (val[1].hasFill) return msg.reply({
             content: "```Invalid usage of $? in a single command execution```",
             allowedMentions: {}
@@ -141,9 +148,9 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
             allowedMentions: {}
         }).catch(() => {});
     }
-
+    
     let latest: string;
-
+    
     while (!stack.empty()) {
         const v = stack.unqueue();
         if (typeof v !== 'string') {
@@ -158,52 +165,77 @@ export default new ShellEvent('messageCreate', false, async(msg) => {
             }).catch(() => {});
             throw new ShellRuntimeNeverError(`Unqueued a text that is not an operator`);
         }
-
+        
         const a = stack.unqueue() as [ShellCommand, ShellCommandOptionsFinder];
-        const b = stack.unqueue() as [ShellCommand, ShellCommandOptionsFinder];
+        if (!!latest) {
+            if (a[1].hasFill) a[1].giveFill(latest);
+            const resA = await executeCommand(a[0], a[1], msg);
 
-        if (a[1].hasFill) {
-            if (!latest) return msg.reply({
-                content: "```Invalid usage of $? in first command```",
-                allowedMentions: {}
-            }).catch(() => {});
-            a[1].giveFill(latest);
-        }
-        const resA = await executeCommand(a[0], a[1], msg);
-        if (v === '&') {
-            if (!resA[0]) {
-                return msg.reply({
-                    content: `\`\`\`${resA[2]}\`\`\``,
-                    allowedMentions: {}
-                }).catch(() => {});
-            } else {
-                if (b[1].hasFill) {
-                    b[1].giveFill(resA[1]);
-                }
-                const resB = await executeCommand(b[0], b[1], msg);
-                if (!resB[0]) {
+            if (v === '|') {
+                if (latest === '0' && !resA[0]) {
                     return msg.reply({
-                        content: `\`\`\`${resB[2]}\`\`\``,
+                        content: `\`\`\`${resA[2]}\`\`\``,
+                        allowedMentions: {}
+                    }).catch(() => {});
+                } else if (resA[0]) {
+                    latest = resA[1];
+                }
+            } else {
+                if (latest === '0' || !resA[0]) {
+                    return msg.reply({
+                        content: `\`\`\`${resA[2]}\`\`\``,
                         allowedMentions: {}
                     }).catch(() => {});
                 } else {
-                    latest = resB[1];
+                    latest = resA[1];
                 }
             }
-        } else if (v === '|') {
-            if (b[1].hasFill) b[1].giveFill(resA[1]);
-            const resB = await executeCommand(b[0], b[1], msg);
-            if (!resA[0] && !resB[0]) {
+        } else {
+            const b = stack.unqueue() as [ShellCommand, ShellCommandOptionsFinder];
+            if (a[1].hasFill) {
                 return msg.reply({
-                    content: `\`\`\`${resA[2]}\`\`\``,
+                    content: "```Invalid usage of $? in first command```",
                     allowedMentions: {}
                 }).catch(() => {});
-            } else if (!resA[0]) {
-                latest = resB[1];
-            } else {
-                latest = resA[1]
             }
+            const resA = await executeCommand(a[0], a[1], msg);
+            if (v === '&') {
+                if (!resA[0]) {
+                    return msg.reply({
+                        content: `\`\`\`${resA[2]}\`\`\``,
+                        allowedMentions: {}
+                    }).catch(() => {});
+                } else {
+                    if (b[1].hasFill) {
+                        b[1].giveFill(resA[1]);
+                    }
+                    const resB = await executeCommand(b[0], b[1], msg);
+                    if (!resB[0]) {
+                        return msg.reply({
+                            content: `\`\`\`${resB[2]}\`\`\``,
+                            allowedMentions: {}
+                        }).catch(() => {});
+                    } else {
+                        latest = resB[1];
+                    }
+                }
+            } else if (v === '|') {
+                if (b[1].hasFill) b[1].giveFill(resA[1]);
+                const resB = await executeCommand(b[0], b[1], msg);
+                if (!resA[0] && !resB[0]) {
+                    return msg.reply({
+                        content: `\`\`\`${resA[2]}\`\`\``,
+                        allowedMentions: {}
+                    }).catch(() => {});
+                } else if (!resA[0]) {
+                    latest = resB[1];
+                } else {
+                    latest = resA[1]
+                }
+            }
+            
         }
+        
     }
     msg.reply({
         content: `\`\`\`${latest}\`\`\``,

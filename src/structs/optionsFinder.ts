@@ -34,7 +34,7 @@ export class ShellCommandOptionsFinder {
             };
             if (!option.doubleDash) {
                 this.simple[option.prefix] = option;
-                if (option.value === '$?') this.toReplace.push({ type: 'd', key: option.prefix });
+                if (option.value === '$?') this.toReplace.push({ type: 's', key: option.prefix });
             };
         });
         Object.entries(this.args).forEach(([k, v]) => {

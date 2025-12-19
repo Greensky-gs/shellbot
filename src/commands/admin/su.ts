@@ -52,7 +52,7 @@ export default new ShellCommand({
     const action = options.present('a', false) ? 'add' : options.present('r', false) ? 'remove' : options.present('l', false) ? 'list' : 'none';
 
     if (action == 'none') {
-        message.reply(`\`\`\`No action specified\nusage:\n    sudo sus -a --user @user : add user as super user\n    sudo sus -r --user @user : removes @user from super users\n    sudo sus -l : display the list of super users\`\`\``).catch(() => {});
+        message.reply(`\`\`\`No action specified\nusage:\n    sudo sus -a @user : add user as super user\n    sudo sus -r @user : removes @user from super users\n    sudo sus -l : display the list of super users\`\`\``).catch(() => {});
         return ['1', 'never']
     };
 

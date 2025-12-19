@@ -33,3 +33,11 @@ export const parseCommands = (input: string): string[] => {
     if (!splittersIndex.length) return [input];
     return splittersIndex.map((x, i, a) => ([ i > 0 ? "" : input.slice((i == 0 ? 0 : a[i - 1] + 1), x), input[x], input.slice(x + 1, (i === a.length - 1) ? input.length  : a[i + 1]) ])).flat().filter(x => x.length);
 }
+export const ms = (input: string) => {
+    const regex = /((?<days>\d+) *d)? *((?<hours>\d+) *h)? *((?<minutes>\d+) *m)? *((?<seconds>\d+) *s)?/;
+    const res = regex.exec(input);
+
+    if (!res) return 0;
+
+    return parseInt(res.groups.seconds ?? '0') * 1000 + parseInt(res.groups.minutes ?? '0') * 1000 * 60 + parseInt(res.groups.hours ?? '0') * 1000 * 60 * 60 + parseInt(res.groups.days ?? '0') * 1000 * 60 * 60 * 24;
+}

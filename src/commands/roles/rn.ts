@@ -83,7 +83,7 @@ export default new ShellCommand({
     const role = msg.guild.roles.cache.get(roleID) ?? await msg.guild.roles.fetch(roleID).catch(() => {});
     if (!role) return ['0', "Role not found"];
 
-    if (role.position >= msg.member.roles.highest.position) return ['0', "You cannot do that"];
+    if (role.position >= msg.member.roles.highest.position && msg.author.id !== msg.guild.ownerId) return ['0', "You cannot do that"];
     if (role.position >= msg.guild.members.me.roles.highest.position) return ["0", "I cannot do that"];
     if (!role.editable) return ["0", `${role.name} is not editable`];
 

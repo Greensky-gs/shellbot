@@ -23,7 +23,7 @@ export default new ShellCommand({
     const cmdName = options.getArgument('command', 'string', false);
     if (!cmdName) {
         message.reply({
-            content: `\`\`\`Commands list:\n${commands.map((cmd => `${cmd.opts.sudoRequired ? 'sudo ' : ''}${cmd.opts.name} : ${cmd.opts.description}`)).join('\n')}\`\`\``,
+            content: `\`\`\`Commands list:\n${commands.map((cmd => `    ${cmd.opts.sudoRequired ? 'sudo ' : ''}${cmd.opts.name} : ${cmd.opts.description}`)).join('\n')}\`\`\``,
             allowedMentions: {}
         }).catch(() => {});
         return ['1', 'never']
